@@ -4,13 +4,13 @@ A personalized fitness platform for gym beginners — takes someone from zero to
 
 **Live:** https://devagarwal2709.github.io/gymforge/
 
-<p align="center">
-  <img src="screenshots/home.png" width="180"/>
-  <img src="screenshots/onboarding.png" width="180"/>
-  <img src="screenshots/plan.png" width="180"/>
-  <img src="screenshots/workout.png" width="180"/>
-  <img src="screenshots/nutrition.png" width="180"/>
-</p>
+| Home | Onboarding | Plan |
+|:---:|:---:|:---:|
+| ![Home](screenshots/home.png) | ![Onboarding](screenshots/onboarding.png) | ![Plan](screenshots/plan.png) |
+
+| Workout | Nutrition | Exercise |
+|:---:|:---:|:---:|
+| ![Workout](screenshots/workout.png) | ![Nutrition](screenshots/nutrition.png) | ![Exercise](screenshots/exercise.png) |
 
 ---
 
