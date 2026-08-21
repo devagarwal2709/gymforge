@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GymForge — Build Your Plan</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+
+    /* ══════════════════════════════════════════
+       DESIGN TOKENS — same as every page
+    ══════════════════════════════════════════ */
+    :root {
+      --bg:        #111314;
+      --surface:   #1C1F21;
+      --surface-2: #242729;
+      --border:    #2C3033;
+      --amber:     #F5A623;
+      --amber-dim: rgba(245, 166, 35, 0.10);
+      --text:      #F0EFED;
+      --text-2:    #8A8F94;
+      --text-3:    #555C62;
+      --danger:    #E05A5A;
+      --radius:    12px;
+      --max-w:     720px;
+    }
+
+
+    /* ══════════════════════════════════════════
+       RESET
+    ══════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+    a { color: inherit; text-decoration: none; }
+
+
+    /* ══════════════════════════════════════════
+       NAVIGATION
+    ══════════════════════════════════════════ */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(17, 19, 20, 0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: 0.04em; }
+    .logo span { color: var(--amber); }
+
+    .nav-back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-2);
+      transition: color 0.15s;
+    }
+    .nav-back:hover { color: var(--text); }
+
+
+    /* ══════════════════════════════════════════
+       PROGRESS BAR
+       Thin amber line at top showing form progress.
+       Width is updated by JavaScript.
+    ══════════════════════════════════════════ */
+    .progress-track {
+      height: 3px;
+      background: var(--border);
+    }
+
+    .progress-fill {
+      height: 3px;
+      background: var(--amber);
+      width: 0%;             /* JS sets this */
+      transition: width 0.4s ease;
+    }
+
+
+    /* ══════════════════════════════════════════
+       PAGE LAYOUT
+    ══════════════════════════════════════════ */
+    .page {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+
+    /* ══════════════════════════════════════════
+       PAGE HEADER
+    ══════════════════════════════════════════ */
+    .page-header {
+      padding: 48px 0 40px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 40px;
+    }
+
+    .page-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--amber);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .page-header h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: clamp(32px, 7vw, 48px);
+      line-height: 1;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .page-header p {
+      font-size: 15px;
+      color: var(--text-2);
+      max-width: 460px;
+    }
+
+
+    /* ══════════════════════════════════════════
+       QUESTION BLOCK — wraps each question
+    ══════════════════════════════════════════ */
+    .question-block {
+      margin-bottom: 48px;
+    }
+
+    /* fieldset removes default browser styling */
+    fieldset {
+      border: none;
+      padding: 0;
+      min-width: 0;
+    }
+
+    /* Question title — used as <legend> or <label> */
+    .question-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      color: var(--text);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .question-hint {
+      font-size: 13px;
+      color: var(--text-3);
+      font-style: italic;
+      margin-bottom: 20px;
+    }
+
+
+    /* ══════════════════════════════════════════
+       RADIO CARDS
+       Hidden real input + styled label trick.
+
+       How it works:
+       1. <input type="radio"> is hidden (opacity 0, size 0)
+       2. <label> is styled to look like a card
+       3. When input is :checked, the label next to it
+          gets styled via CSS selector:
+          input:checked + label { amber border }
+    ══════════════════════════════════════════ */
+    .radio-group {
+      display: grid;
+      gap: 10px;
+    }
+
+    .radio-group.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .radio-group.cols-2 { grid-template-columns: repeat(2, 1fr); }
+
+    /* Hide the real radio input completely */
+    .radio-group input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    /* The visible card (label) */
+    .radio-card {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      user-select: none;
+    }
+    .radio-card:hover { border-color: var(--text-3); }
+
+    /* When the hidden radio is checked → style the label */
+    .radio-group input[type="radio"]:checked + .radio-card {
+      border-color: var(--amber);
+      background: var(--amber-dim);
+    }
+
+    /* Keyboard accessibility focus ring */
+    .radio-group input[type="radio"]:focus-visible + .radio-card {
+      outline: 2px solid var(--amber);
+      outline-offset: 2px;
+    }
+
+    .radio-card-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 17px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .radio-card-desc {
+      font-size: 13px;
+      color: var(--text-2);
+      line-height: 1.5;
+    }
+
+    /* Small circle that fills when selected */
+    .radio-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      margin-left: auto;
+      margin-top: 6px;
+      flex-shrink: 0;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .radio-group input[type="radio"]:checked + .radio-card .radio-dot {
+      border-color: var(--amber);
+      background: var(--amber);
+    }
+
+
+    /* ══════════════════════════════════════════
+       NUMBER INPUT — for bodyweight
+    ══════════════════════════════════════════ */
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .number-input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+      /* Remove browser spin arrows */
+      -moz-appearance: textfield;
+    }
+    .number-input::-webkit-inner-spin-button,
+    .number-input::-webkit-outer-spin-button { appearance: none; }
+    .number-input:focus  { border-color: var(--amber); }
+    .number-input::placeholder { color: var(--text-3); }
+
+    /* kg / lbs toggle — same hidden radio trick */
+    .unit-toggle {
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .unit-toggle input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .unit-label {
+      padding: 0 18px;
+      display: flex;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--text-3);
+      cursor: pointer;
+      transition: color 0.15s, background 0.15s;
+      user-select: none;
+    }
+
+    .unit-toggle input[type="radio"]:checked + .unit-label {
+      background: var(--amber-dim);
+      color: var(--amber);
+    }
+
+
+    /* ══════════════════════════════════════════
+       TEXTAREA — for injuries (optional)
+    ══════════════════════════════════════════ */
+    .textarea-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+      resize: vertical;
+      min-height: 100px;
+      transition: border-color 0.15s;
+      line-height: 1.6;
+    }
+    .textarea-input:focus { border-color: var(--amber); }
+    .textarea-input::placeholder { color: var(--text-3); }
+
+
+    /* ══════════════════════════════════════════
+       OPTIONAL BADGE — shown next to label
+    ══════════════════════════════════════════ */
+    .optional-badge {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-3);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 7px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      vertical-align: middle;
+      margin-left: 8px;
+    }
+
+
+    /* ══════════════════════════════════════════
+       DIVIDER — horizontal line between questions
+    ══════════════════════════════════════════ */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 40px 0;
+    }
+
+
+    /* ══════════════════════════════════════════
+       ERROR MESSAGE — shown by JS if validation fails
+    ══════════════════════════════════════════ */
+    .error-msg {
+      display: none;         /* hidden by default, JS shows it */
+      font-size: 13px;
+      color: var(--danger);
+      margin-top: 10px;
+    }
+    .error-msg.visible { display: block; }
+
+
+    /* ══════════════════════════════════════════
+       STICKY FOOTER BAR
+       Always visible at the bottom while scrolling.
+    ══════════════════════════════════════════ */
+    .form-footer {
+      position: sticky;
+      bottom: 0;
+      background: rgba(17, 19, 20, 0.95);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      padding: 16px 0;
+      margin-top: 64px;
+    }
+
+    .form-footer-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .footer-step-info {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--text-3);
+    }
+
+    /* Submit button */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--bg);
+      background: var(--amber);
+      padding: 12px 24px;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
+
+    /* ══════════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════════ */
+    @media (max-width: 600px) {
+      .radio-group.cols-3 { grid-template-columns: 1fr; }
+      .radio-group.cols-2 { grid-template-columns: 1fr; }
+      .page-header        { padding: 32px 0 28px; }
+      .form-footer-inner  { flex-direction: column; align-items: stretch; }
+      .btn-primary        { justify-content: center; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- ── NAVIGATION ── -->
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="logo">Gym<span>Forge</span></a>
+      <a href="index.html" class="nav-back">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M13 8H3M7 4L3 8l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Back
+      </a>
+    </div>
+  </nav>
+
+  <!-- Progress bar — JS updates the width -->
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+
+  <!-- ── MAIN FORM ── -->
+  <main class="page">
+
+    <div class="page-header">
+      <div class="page-eyebrow">6 questions · 2 minutes</div>
+      <h1>Build Your<br />First Plan</h1>
+      <p>Honest answers give you a better plan. You can always change these later.</p>
+    </div>
+
+    <form id="onboardingForm">
+
+      <!-- Q1: Goal -->
+      <div class="question-block" id="block-goal">
+        <fieldset>
+          <legend class="question-title">What's your main goal right now?</legend>
+          <p class="question-hint">Pick the one that matters most.</p>
+
+          <div class="radio-group cols-3">
+            <input type="radio" name="goal" id="goal-fat"      value="lose_fat" />
+            <label class="radio-card" for="goal-fat">
+              <span class="radio-card-title">Lose fat</span>
+              <span class="radio-card-desc">Burn fat while keeping muscle</span>
+              <span class="radio-dot"></span>
+            </label>
+
+            <input type="radio" name="goal" id="goal-muscle"   value="build_muscle" />
+            <label class="radio-card" for="goal-muscle">
+              <span class="radio-card-title">Build muscle</span>
+              <span class="radio-card-desc">Get stronger and add size</span>
+              <span class="radio-dot"></span>
+            </label>
+
+            <input type="radio" name="goal" id="goal-strength" value="get_stronger" />
+            <label class="radio-card" for="goal-strength">
+              <span class="radio-card-title">Get stronger</span>
+              <span class="radio-card-desc">Improve lifts and performance</span>
+              <span class="radio-dot"></span>
+            </label>
+          </div>
+
+          <p class="error-msg" id="error-goal">Please pick a goal to continue.</p>
+        </fieldset>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Q2: Experience -->
+      <div class="question-block" id="block-experience">
+        <fieldset>
+          <legend class="question-title">How long have you been training?</legend>
+          <p class="question-hint">Be honest — a beginner plan for an intermediate is worse than the other way around.</p>
+
+          <div class="radio-group cols-3">
+            <input type="radio" name="experience" id="exp-never"   value="never" />
+            <label class="radio-card" for="exp-never">
+              <span class="radio-card-title">Never</span>
+              <span class="radio-card-desc">First time in a gym</span>
+              <span class="radio-dot"></span>
+            </label>
+
+            <input type="radio" name="experience" id="exp-some"    value="under_6mo" />
+            <label class="radio-card" for="exp-some">
+              <span class="radio-card-title">Under 6 months</span>
+              <span class="radio-card-desc">Been a few times, no real routine</span>
+              <span class="radio-dot"></span>
+            </label>
+
+            <input type="radio" name="experience" id="exp-trained" value="over_6mo" />
+            <label class="radio-card" for="exp-trained">
+              <span class="radio-card-title">6+ months</span>
+              <span class="radio-card-desc">Have a base, need structure</span>
+              <span class="radio-dot"></span>
+            </label>
+          </div>
+
+          <p class="error-msg" id="error-experience">Please select your experience level.</p>
+        </fieldset>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Q3: Days per week -->
+      <div class="question-block" id="block-days">
+        <fieldset>
+          <legend class="question-title">How many days can you train per week?</legend>
+          <p class="question-hint">Pick what you can actually commit to — not the ideal.</p>
+
+          <div class="radio-group cols-3">
+            <input type="radio" name="days" id="days-3" value="3" />
+            <label class="radio-card" for="days-3">
+              <span class="radio-card-title">3 days</span>
+              <span class="radio-card-desc">Full Body — best for beginners</span>
+              <span class="radio-dot"></span>
+            </label>
+
+            <input type="radio" name="days" id="days-4" value="4" />
+            <label class="radio-card" for="days-4">
+              <span class="radio-card-title">4 days</span>
+              <span class="radio-card-desc">Upper / Lower split</span>
+              <span class="radio-dot"></span>
+            </label>
+
+            <input type="radio" name="days" id="days-5" value="5" />
+            <label class="radio-card" for="days-5">
+              <span class="radio-card-title">5 days</span>
+              <span class="radio-card-desc">Push / Pull / Legs</span>
+              <span class="radio-dot"></span>
+            </label>
+          </div>
+
+          <p class="error-msg" id="error-days">Please select how many days you can train.</p>
+        </fieldset>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Q4: Equipment -->
+      <div class="question-block" id="block-equipment">
+        <fieldset>
+          <legend class="question-title">What equipment do you have access to?</legend>
+          <p class="question-hint">Your plan will only include exercises you can actually do.</p>
+
+          <div class="radio-group cols-3">
+            <input type="radio" name="equipment" id="equip-gym"  value="full_gym" />
+            <label class="radio-card" for="equip-gym">
+              <span class="radio-card-title">Full gym</span>
+              <span class="radio-card-desc">Barbells, cables, machines</span>
+              <span class="radio-dot"></span>
+            </label>
+
+            <input type="radio" name="equipment" id="equip-home" value="home_gym" />
+            <label class="radio-card" for="equip-home">
+              <span class="radio-card-title">Home gym</span>
+              <span class="radio-card-desc">Dumbbells and a bench</span>
+              <span class="radio-dot"></span>
+            </label>
+
+            <input type="radio" name="equipment" id="equip-bw"   value="bodyweight" />
+            <label class="radio-card" for="equip-bw">
+              <span class="radio-card-title">Bodyweight</span>
+              <span class="radio-card-desc">No equipment at all</span>
+              <span class="radio-dot"></span>
+            </label>
+          </div>
+
+          <p class="error-msg" id="error-equipment">Please select your equipment access.</p>
+        </fieldset>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Q5: Bodyweight -->
+      <div class="question-block" id="block-bodyweight">
+        <label class="question-title" for="bodyweight">What's your current bodyweight?</label>
+        <p class="question-hint">Used to calculate your calorie and protein targets. Nobody else sees this.</p>
+
+        <div class="input-row">
+          <!-- Number input -->
+          <input
+            class="number-input"
+            type="number"
+            id="bodyweight"
+            name="bodyweight"
+            placeholder="75"
+            min="30"
+            max="300"
+          />
+
+          <!-- kg / lbs toggle — same hidden radio trick as question cards -->
+          <div class="unit-toggle">
+            <input type="radio" name="unit" id="unit-kg"  value="kg"  checked />
+            <label class="unit-label" for="unit-kg">kg</label>
+
+            <input type="radio" name="unit" id="unit-lbs" value="lbs" />
+            <label class="unit-label" for="unit-lbs">lbs</label>
+          </div>
+        </div>
+
+        <p class="error-msg" id="error-bodyweight">Please enter your bodyweight.</p>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Q6: Injuries (optional) -->
+      <div class="question-block">
+        <label class="question-title" for="injuries">
+          Any injuries or areas to avoid?
+          <span class="optional-badge">Optional</span>
+        </label>
+        <p class="question-hint">Bad shoulder, knee pain, lower back — anything that should shape your plan.</p>
+
+        <textarea
+          class="textarea-input"
+          id="injuries"
+          name="injuries"
+          placeholder="e.g. Bad left knee — avoid heavy squats and lunges"
+          rows="3"
+        ></textarea>
+      </div>
+
+    </form>
+  </main>
+
+
+  <!-- ── STICKY FOOTER — submit button ── -->
+  <div class="form-footer">
+    <div class="form-footer-inner">
+      <span class="footer-step-info" id="footerStepInfo">Answer all questions to continue</span>
+      <button type="button" id="submitBtn" class="btn-primary">
+        Build My Plan
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+
+  <script>
+
+    // ══════════════════════════════════════════
+    // CALORIE CALCULATION
+    // Using Mifflin-St Jeor formula for TDEE.
+    // We assume male, age 25, moderate activity.
+    // (Phase 4 will ask age/gender via backend)
+    // ══════════════════════════════════════════
+
+    function calculateNutrition(bodyweightKg, goal) {
+
+      // Base Metabolic Rate (calories burned at rest)
+      // Formula: (10 × weight) + (6.25 × height) - (5 × age) + 5
+      // Using average height 175cm, age 25
+      const bmr = (10 * bodyweightKg) + (6.25 * 175) - (5 * 25) + 5;
+
+      // Total Daily Energy Expenditure = BMR × activity multiplier
+      // 1.55 = moderately active (3-5 days/week)
+      const tdee = Math.round(bmr * 1.55);
+
+      // Adjust calories based on goal
+      let calories;
+      if (goal === 'lose_fat')     calories = tdee - 400; // deficit
+      if (goal === 'build_muscle') calories = tdee + 200; // surplus
+      if (goal === 'get_stronger') calories = tdee;       // maintenance
+
+      // Protein: 2.2g per kg of bodyweight
+      const protein = Math.round(bodyweightKg * 2.2);
+
+      // Fat: 25% of calories (1g fat = 9 calories)
+      const fat = Math.round((calories * 0.25) / 9);
+
+      // Carbs: remaining calories (1g carb = 4 calories)
+      const carbs = Math.round((calories - (protein * 4) - (fat * 9)) / 4);
+
+      return { calories, protein, carbs, fat };
+    }
+
+
+    // ══════════════════════════════════════════
+    // PROGRESS BAR
+    // Counts how many questions are answered
+    // and updates the amber bar at the top.
+    // ══════════════════════════════════════════
+
+    function updateProgressBar() {
+      const totalQuestions = 5; // excluding optional injuries
+
+      let answered = 0;
+
+      // Check each radio group
+      if (document.querySelector('input[name="goal"]:checked'))      answered++;
+      if (document.querySelector('input[name="experience"]:checked')) answered++;
+      if (document.querySelector('input[name="days"]:checked'))       answered++;
+      if (document.querySelector('input[name="equipment"]:checked'))  answered++;
+
+      // Check bodyweight input
+      const weight = document.getElementById('bodyweight').value;
+      if (weight && parseFloat(weight) > 0) answered++;
+
+      // Update the bar width
+      const percent = (answered / totalQuestions) * 100;
+      document.getElementById('progressFill').style.width = percent + '%';
+
+      // Update footer text
+      const remaining = totalQuestions - answered;
+      const infoEl = document.getElementById('footerStepInfo');
+      if (remaining === 0) {
+        infoEl.textContent = 'Ready — click to build your plan';
+      } else {
+        infoEl.textContent = remaining + ' question' + (remaining > 1 ? 's' : '') + ' remaining';
+      }
+    }
+
+    // Update progress bar whenever anything changes
+    document.getElementById('onboardingForm').addEventListener('change', updateProgressBar);
+    document.getElementById('bodyweight').addEventListener('input', updateProgressBar);
+
+
+    // ══════════════════════════════════════════
+    // FORM VALIDATION
+    // Check all required fields before saving.
+    // Shows red error messages if something missing.
+    // ══════════════════════════════════════════
+
+    function validateForm() {
+      let isValid = true;
+
+      // Helper: show or hide an error message
+      function setError(id, show) {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('visible', show);
+        if (show) isValid = false;
+      }
+
+      // Check each required radio group
+      setError('error-goal',       !document.querySelector('input[name="goal"]:checked'));
+      setError('error-experience', !document.querySelector('input[name="experience"]:checked'));
+      setError('error-days',       !document.querySelector('input[name="days"]:checked'));
+      setError('error-equipment',  !document.querySelector('input[name="equipment"]:checked'));
+
+      // Check bodyweight
+      const weight = parseFloat(document.getElementById('bodyweight').value);
+      setError('error-bodyweight', !weight || weight < 30 || weight > 300);
+
+      return isValid;
+    }
+
+
+    // ══════════════════════════════════════════
+    // SUBMIT — save profile + go to plan page
+    // ══════════════════════════════════════════
+
+    document.getElementById('submitBtn').addEventListener('click', function () {
+
+      // Stop if anything is missing
+      if (!validateForm()) return;
+
+      // Read all values from the form
+      const goal       = document.querySelector('input[name="goal"]:checked').value;
+      const experience = document.querySelector('input[name="experience"]:checked').value;
+      const days       = document.querySelector('input[name="days"]:checked').value;
+      const equipment  = document.querySelector('input[name="equipment"]:checked').value;
+      const unit       = document.querySelector('input[name="unit"]:checked').value;
+      const injuries   = document.getElementById('injuries').value.trim();
+
+      // Convert to kg if user entered lbs
+      let bodyweightRaw = parseFloat(document.getElementById('bodyweight').value);
+      let bodyweightKg  = (unit === 'lbs') ? Math.round(bodyweightRaw * 0.453592) : bodyweightRaw;
+
+      // Calculate nutrition targets
+      const nutrition = calculateNutrition(bodyweightKg, goal);
+
+      // Build the profile object
+      const profile = {
+        goal,
+        experience,
+        days,
+        equipment,
+        unit,
+        injuries,
+        bodyweight:    bodyweightRaw,
+        bodyweightKg:  bodyweightKg,
+        calories:      nutrition.calories,
+        protein:       nutrition.protein,
+        carbs:         nutrition.carbs,
+        fat:           nutrition.fat,
+        createdAt:     new Date().toISOString()
+      };
+
+      // Save to localStorage as a JSON string
+      // localStorage can only store strings, not objects
+      localStorage.setItem('gf_profile', JSON.stringify(profile));
+
+      // Go to the plan page
+      window.location.href = 'plan.html';
+    });
+
+  </script>
+</body>
+</html>

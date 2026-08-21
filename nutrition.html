@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GymForge — Nutrition</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+
+    /* ══════════════════════════════════════════
+       DESIGN TOKENS
+    ══════════════════════════════════════════ */
+    :root {
+      --bg:         #111314;
+      --surface:    #1C1F21;
+      --surface-2:  #242729;
+      --border:     #2C3033;
+      --amber:      #F5A623;
+      --amber-dim:  rgba(245, 166, 35, 0.10);
+      --text:       #F0EFED;
+      --text-2:     #8A8F94;
+      --text-3:     #555C62;
+      --green:      #4CAF7D;
+      --green-dim:  rgba(76, 175, 125, 0.10);
+      --blue:       #6AB4F5;
+      --blue-dim:   rgba(106, 180, 245, 0.10);
+      --purple:     #B4A8F5;
+      --purple-dim: rgba(180, 168, 245, 0.10);
+      --radius:     12px;
+      --max-w:      720px;
+    }
+
+
+    /* ══════════════════════════════════════════
+       RESET
+    ══════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+
+
+    /* ══════════════════════════════════════════
+       NAVIGATION
+    ══════════════════════════════════════════ */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(17, 19, 20, 0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: 0.04em; }
+    .logo span { color: var(--amber); }
+    .nav-back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-2);
+      transition: color 0.15s;
+    }
+    .nav-back:hover { color: var(--text); }
+
+
+    /* ══════════════════════════════════════════
+       PAGE LAYOUT
+    ══════════════════════════════════════════ */
+    .page {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+
+    /* ══════════════════════════════════════════
+       PAGE HEADER
+    ══════════════════════════════════════════ */
+    .page-header {
+      padding: 48px 0 40px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 36px;
+    }
+    .page-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--amber);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .page-header h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: clamp(36px, 8vw, 56px);
+      line-height: 1;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .page-header h1 em { font-style: normal; color: var(--amber); }
+    .page-header p { font-size: 15px; color: var(--text-2); max-width: 480px; line-height: 1.65; }
+
+
+    /* ══════════════════════════════════════════
+       SECTION LABEL + HEADING
+    ══════════════════════════════════════════ */
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-3);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .section-heading {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 22px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      margin-top: 36px;
+    }
+
+    .divider { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+
+    /* ══════════════════════════════════════════
+       CALORIE TARGET CARD
+       Big amber number with explanation below.
+    ══════════════════════════════════════════ */
+    .calorie-card {
+      background: var(--surface);
+      border: 1px solid var(--amber);
+      border-radius: 16px;
+      padding: 36px;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    /* Radial amber glow in background */
+    .calorie-card::before {
+      content: '';
+      position: absolute;
+      top: -40px; left: 50%;
+      transform: translateX(-50%);
+      width: 280px; height: 280px;
+      background: radial-gradient(circle, rgba(245,166,35,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .calorie-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--amber);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    /* The big calorie number */
+    .calorie-number {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: clamp(56px, 14vw, 96px);
+      color: var(--amber);
+      line-height: 1;
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    .calorie-unit {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      color: var(--text-3);
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .calorie-explanation {
+      font-size: 14px;
+      color: var(--text-2);
+      line-height: 1.6;
+      max-width: 400px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+
+    /* ══════════════════════════════════════════
+       MACRO CARDS
+       Four individual cards for each macro.
+       Each has its own color.
+    ══════════════════════════════════════════ */
+    .macro-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .macro-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 16px;
+      text-align: center;
+    }
+
+    /* Color accent bar at top of each card */
+    .macro-card::before {
+      content: '';
+      display: block;
+      height: 3px;
+      border-radius: 2px;
+      margin-bottom: 16px;
+    }
+
+    .macro-card.protein::before { background: var(--blue); }
+    .macro-card.carbs::before   { background: var(--purple); }
+    .macro-card.fat::before     { background: var(--green); }
+
+    .macro-num {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: 36px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .macro-card.protein .macro-num { color: var(--blue); }
+    .macro-card.carbs   .macro-num { color: var(--purple); }
+    .macro-card.fat     .macro-num { color: var(--green); }
+
+    .macro-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-3);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .macro-desc { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+
+
+    /* ══════════════════════════════════════════
+       HOW IT WAS CALCULATED — formula breakdown
+    ══════════════════════════════════════════ */
+    .formula-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+
+    .formula-card h3 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .formula-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+    .formula-row:last-child { border-bottom: none; }
+
+    .formula-row-label { color: var(--text-2); }
+
+    .formula-row-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .formula-row-value.amber { color: var(--amber); }
+
+
+    /* ══════════════════════════════════════════
+       PROTEIN PRIORITY SECTION
+       The most important nutrition advice.
+    ══════════════════════════════════════════ */
+    .priority-card {
+      background: var(--blue-dim);
+      border: 1px solid rgba(106, 180, 245, 0.2);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 32px;
+    }
+
+    .priority-card h3 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 20px;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 12px;
+    }
+
+    .priority-card p {
+      font-size: 15px;
+      color: var(--text-2);
+      line-height: 1.7;
+    }
+    .priority-card p + p { margin-top: 10px; }
+
+    /* Protein target highlight inside the card */
+    .protein-highlight {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid rgba(106, 180, 245, 0.3);
+      border-radius: 8px;
+      padding: 10px 16px;
+      margin-top: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--blue);
+    }
+
+    .protein-highlight strong {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+
+    /* ══════════════════════════════════════════
+       FOOD LIST — high protein sources
+    ══════════════════════════════════════════ */
+    .food-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+
+    .food-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    /* Colored dot per food category */
+    .food-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+      margin-top: 6px;
+    }
+
+    .food-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 17px;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+
+    .food-amount { font-size: 13px; color: var(--text-2); }
+
+
+    /* ══════════════════════════════════════════
+       WHAT TO IGNORE CARD
+       Tells beginners what NOT to obsess over.
+       This is actually one of the most valuable cards.
+    ══════════════════════════════════════════ */
+    .ignore-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 32px;
+    }
+
+    .ignore-card h3 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: 20px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .ignore-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .ignore-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--text-2);
+      line-height: 1.6;
+    }
+
+    /* X icon */
+    .ignore-x {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--text-3);
+      margin-top: 2px;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .ignore-row strong { color: var(--text); font-weight: 600; }
+
+
+    /* ══════════════════════════════════════════
+       BUTTONS
+    ══════════════════════════════════════════ */
+    .page-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--bg);
+      background: var(--amber);
+      padding: 14px 28px;
+      border-radius: var(--radius);
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-2);
+      border: 1px solid var(--border);
+      padding: 14px 28px;
+      border-radius: var(--radius);
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--text-3); }
+
+
+    /* ══════════════════════════════════════════
+       FOOTER
+    ══════════════════════════════════════════ */
+    footer { border-top: 1px solid var(--border); padding: 32px 0; margin-top: 40px; }
+    .footer-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .footer-logo { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: 0.04em; }
+    .footer-logo span { color: var(--amber); }
+    .footer-copy { font-size: 13px; color: var(--text-3); }
+
+
+    /* ══════════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════════ */
+    @media (max-width: 600px) {
+      .macro-grid  { grid-template-columns: 1fr; }
+      .food-grid   { grid-template-columns: 1fr; }
+      .page-actions { flex-direction: column; }
+      .btn-primary, .btn-ghost { justify-content: center; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- ── NAVIGATION ── -->
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="logo">Gym<span>Forge</span></a>
+      <a href="plan.html" class="nav-back">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M13 8H3M7 4L3 8l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        My plan
+      </a>
+    </div>
+  </nav>
+
+
+  <main class="page">
+
+    <!-- Page header — filled by JS -->
+    <div class="page-header">
+      <div class="page-eyebrow">Your nutrition targets</div>
+      <h1>Fuel<br /><em>The Work.</em></h1>
+      <p id="headerSubtitle">Calculated from your bodyweight and goal. These are starting targets — adjust as you learn how your body responds.</p>
+    </div>
+
+    <!-- Big calorie number card -->
+    <div class="calorie-card">
+      <div class="calorie-label">Daily calorie target</div>
+      <div class="calorie-number" id="calorieNumber">—</div>
+      <div class="calorie-unit">kcal per day</div>
+      <p class="calorie-explanation" id="calorieExplanation">
+        Loading your targets...
+      </p>
+    </div>
+
+    <!-- Three macro cards -->
+    <div class="macro-grid">
+      <div class="macro-card protein">
+        <div class="macro-num" id="macroProtein">—</div>
+        <div class="macro-name">Protein</div>
+        <div class="macro-desc">g per day · Most important macro for muscle</div>
+      </div>
+      <div class="macro-card carbs">
+        <div class="macro-num" id="macroCarbs">—</div>
+        <div class="macro-name">Carbs</div>
+        <div class="macro-desc">g per day · Fuel for training sessions</div>
+      </div>
+      <div class="macro-card fat">
+        <div class="macro-num" id="macroFat">—</div>
+        <div class="macro-name">Fat</div>
+        <div class="macro-desc">g per day · Hormones and recovery</div>
+      </div>
+    </div>
+
+    <!-- How it was calculated -->
+    <div class="formula-card">
+      <h3>How this was calculated</h3>
+      <div class="formula-row">
+        <span class="formula-row-label">Your bodyweight</span>
+        <span class="formula-row-value" id="formulaWeight">—</span>
+      </div>
+      <div class="formula-row">
+        <span class="formula-row-label">Base metabolic rate (BMR)</span>
+        <span class="formula-row-value" id="formulaBMR">—</span>
+      </div>
+      <div class="formula-row">
+        <span class="formula-row-label">Activity multiplier</span>
+        <span class="formula-row-value">× 1.55 (moderately active)</span>
+      </div>
+      <div class="formula-row">
+        <span class="formula-row-label">Maintenance calories (TDEE)</span>
+        <span class="formula-row-value" id="formulaTDEE">—</span>
+      </div>
+      <div class="formula-row">
+        <span class="formula-row-label">Goal adjustment</span>
+        <span class="formula-row-value" id="formulaAdjustment">—</span>
+      </div>
+      <div class="formula-row">
+        <span class="formula-row-label">Your daily target</span>
+        <span class="formula-row-value amber" id="formulaTarget">—</span>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- Protein priority section -->
+    <div class="priority-card">
+      <h3>Protein is the only macro that truly matters right now</h3>
+      <p>
+        For a beginner, hitting your protein target every day is the single most impactful nutrition habit you can build.
+        Protein is what your body uses to repair and build muscle after training. Without enough of it,
+        the training stimulus is wasted — you worked hard in the gym but gave your body nothing to build with.
+      </p>
+      <p>
+        Hit this number every day. Including rest days. Especially rest days —
+        that's when muscle is actually being built.
+      </p>
+      <div class="protein-highlight">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 2a6 6 0 100 12A6 6 0 008 2z" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M8 5v4M8 10.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Your protein target: <strong id="proteinTarget">—g</strong> every day
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- High protein food guide -->
+    <h3 class="section-heading">Easy high-protein foods</h3>
+    <div class="section-label" style="margin-top: -8px; margin-bottom: 16px;">
+      Amount needed to hit ~30g protein
+    </div>
+
+    <div class="food-grid">
+
+      <div class="food-card">
+        <div class="food-dot"></div>
+        <div>
+          <div class="food-name">Chicken Breast</div>
+          <div class="food-amount">150g cooked → ~45g protein</div>
+        </div>
+      </div>
+
+      <div class="food-card">
+        <div class="food-dot"></div>
+        <div>
+          <div class="food-name">Eggs</div>
+          <div class="food-amount">5 whole eggs → ~30g protein</div>
+        </div>
+      </div>
+
+      <div class="food-card">
+        <div class="food-dot"></div>
+        <div>
+          <div class="food-name">Greek Yogurt</div>
+          <div class="food-amount">300g (full fat) → ~30g protein</div>
+        </div>
+      </div>
+
+      <div class="food-card">
+        <div class="food-dot"></div>
+        <div>
+          <div class="food-name">Paneer</div>
+          <div class="food-amount">200g → ~28g protein</div>
+        </div>
+      </div>
+
+      <div class="food-card">
+        <div class="food-dot"></div>
+        <div>
+          <div class="food-name">Lentils (Dal)</div>
+          <div class="food-amount">200g cooked → ~18g protein</div>
+        </div>
+      </div>
+
+      <div class="food-card">
+        <div class="food-dot"></div>
+        <div>
+          <div class="food-name">Whey Protein</div>
+          <div class="food-amount">1 scoop (30g) → ~24g protein</div>
+        </div>
+      </div>
+
+      <div class="food-card">
+        <div class="food-dot"></div>
+        <div>
+          <div class="food-name">Tuna (canned)</div>
+          <div class="food-amount">1 can (140g) → ~30g protein</div>
+        </div>
+      </div>
+
+      <div class="food-card">
+        <div class="food-dot"></div>
+        <div>
+          <div class="food-name">Cottage Cheese</div>
+          <div class="food-amount">250g → ~28g protein</div>
+        </div>
+      </div>
+
+    </div>
+
+    <hr class="divider" />
+
+    <!-- What to ignore -->
+    <div class="ignore-card">
+      <h3>What to ignore for now</h3>
+      <div class="ignore-list">
+
+        <div class="ignore-row">
+          <div class="ignore-x">✕</div>
+          <p><strong>Don't track carbs or fat obsessively.</strong> At your stage, hitting protein and eating mostly whole foods is enough. Micro-optimizing macros is a distraction from what actually matters: consistency and training.</p>
+        </div>
+
+        <div class="ignore-row">
+          <div class="ignore-x">✕</div>
+          <p><strong>Don't count calories at every meal.</strong> Use these targets as a rough guide. Get a feel for portion sizes over a week or two. You don't need a food scale — yet.</p>
+        </div>
+
+        <div class="ignore-row">
+          <div class="ignore-x">✕</div>
+          <p><strong>Don't cut out entire food groups.</strong> No carbs, no fat, no this, no that — these rules make nutrition harder than it is. Eat real food, hit protein, train hard.</p>
+        </div>
+
+        <div class="ignore-row">
+          <div class="ignore-x">✕</div>
+          <p><strong>Don't buy supplements yet.</strong> The only one worth considering is whey protein if you genuinely struggle to hit your protein target from food. Everything else is marketing.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Bottom actions -->
+    <div class="page-actions">
+      <a href="workout.html" class="btn-primary">
+        Go to today's workout
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+      <a href="plan.html" class="btn-ghost">My plan</a>
+    </div>
+
+  </main>
+
+
+  <footer>
+    <div class="footer-inner">
+      <span class="footer-logo">Gym<span>Forge</span></span>
+      <span class="footer-copy">Your first 90 days, sorted.</span>
+    </div>
+  </footer>
+
+
+  <script>
+
+    // ══════════════════════════════════════════
+    // LOAD PROFILE
+    // Read the profile saved by onboarding.html
+    // ══════════════════════════════════════════
+
+    function loadProfile() {
+      try { return JSON.parse(localStorage.getItem('gf_profile')); }
+      catch(e) { return null; }
+    }
+
+    const profile = loadProfile();
+
+    // If no profile, send to onboarding
+    if (!profile) { window.location.href = 'onboarding.html'; }
+
+
+    // ══════════════════════════════════════════
+    // GOAL COPY
+    // Different text depending on the user's goal
+    // ══════════════════════════════════════════
+
+    const GOAL_COPY = {
+      lose_fat: {
+        subtitle:    'In a calorie deficit to support fat loss while preserving muscle. Protein is high to protect your muscle mass as you lose weight.',
+        explanation: 'You\'re eating 400 calories below maintenance. This creates a deficit that leads to roughly 0.4–0.5 kg of fat loss per week — fast enough to see progress, slow enough to keep muscle.',
+        adjustment:  '− 400 kcal (fat loss deficit)',
+      },
+      build_muscle: {
+        subtitle:    'In a small calorie surplus to support muscle growth. Protein is high to maximize the muscle-building signal from your training.',
+        explanation: 'You\'re eating 200 calories above maintenance. This small surplus gives your body the extra energy it needs to build new muscle tissue without gaining excessive fat.',
+        adjustment:  '+ 200 kcal (muscle building surplus)',
+      },
+      get_stronger: {
+        subtitle:    'At maintenance calories to support strength gains. Your body has everything it needs to get stronger without unnecessary weight gain.',
+        explanation: 'You\'re eating at maintenance — exactly what your body burns. This supports strength and performance without intentionally gaining or losing weight.',
+        adjustment:  '± 0 kcal (maintenance)',
+      },
+    };
+
+    const goalCopy = GOAL_COPY[profile.goal] || GOAL_COPY['build_muscle'];
+
+
+    // ══════════════════════════════════════════
+    // RECALCULATE NUTRITION
+    // Same formula used in onboarding.html.
+    // We recalculate here so the formula breakdown
+    // card can show the intermediate steps.
+    // ══════════════════════════════════════════
+
+    const weightKg = profile.bodyweightKg || profile.bodyweight || 75;
+
+    // BMR using Mifflin-St Jeor (male, 175cm height, age 25)
+    const bmr  = Math.round((10 * weightKg) + (6.25 * 175) - (5 * 25) + 5);
+
+    // TDEE = BMR × activity multiplier
+    const tdee = Math.round(bmr * 1.55);
+
+    // Calories adjusted for goal
+    const calories = profile.calories || (
+      profile.goal === 'lose_fat'     ? tdee - 400 :
+      profile.goal === 'build_muscle' ? tdee + 200 :
+      tdee
+    );
+
+    // Protein: use saved value or recalculate
+    const protein = profile.protein || Math.round(weightKg * 2.2);
+    const fat     = profile.fat     || Math.round((calories * 0.25) / 9);
+    const carbs   = profile.carbs   || Math.round((calories - (protein * 4) - (fat * 9)) / 4);
+
+    // Unit label for display
+    const unitLabel = profile.unit === 'lbs'
+      ? Math.round(weightKg * 2.205) + ' lbs (' + weightKg + ' kg)'
+      : weightKg + ' kg';
+
+
+    // ══════════════════════════════════════════
+    // FILL THE PAGE
+    // ══════════════════════════════════════════
+
+    // Header subtitle
+    document.getElementById('headerSubtitle').textContent = goalCopy.subtitle;
+
+    // Big calorie number
+    document.getElementById('calorieNumber').textContent      = calories.toLocaleString();
+    document.getElementById('calorieExplanation').textContent = goalCopy.explanation;
+
+    // Three macro cards
+    document.getElementById('macroProtein').textContent = protein;
+    document.getElementById('macroCarbs').textContent   = carbs;
+    document.getElementById('macroFat').textContent     = fat;
+
+    // Formula breakdown
+    document.getElementById('formulaWeight').textContent     = unitLabel;
+    document.getElementById('formulaBMR').textContent        = bmr.toLocaleString() + ' kcal';
+    document.getElementById('formulaTDEE').textContent       = tdee.toLocaleString() + ' kcal';
+    document.getElementById('formulaAdjustment').textContent = goalCopy.adjustment;
+    document.getElementById('formulaTarget').textContent     = calories.toLocaleString() + ' kcal';
+
+    // Protein highlight in priority card
+    document.getElementById('proteinTarget').textContent = protein + 'g';
+
+  </script>
+</body>
+</html>
