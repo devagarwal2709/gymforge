@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import Layout from '../components/Layout.jsx'
 import Video from '../components/Video.jsx'
 import { EXERCISES, WORKOUT } from '../data.js'
-import { loadLibrary, IMG_BASE, titleCase } from '../lib/library.js'
+import { fetchExercise, IMG_BASE, titleCase } from '../lib/library.js'
 import { read, write } from '../lib/storage.js'
 
 // For the workout exercises that don't have a hand-written guide yet
@@ -14,41 +14,55 @@ export default function Exercise() {
   const { slug } = useParams()
   const curated = EXERCISES[slug]
   const meta = WORKOUT.find(e => e.id === slug)
-  const [lib, setLib] = useState(null)
+  const isCurated = !!(curated && meta)
+  const [ex, setEx] = useState(null)
+  const [error, setError] = useState('')
   const [favs, setFavs] = useState(() => read('gf_favorites', []))
-  useEffect(() => { loadLibrary().then(setLib) }, [])
+
+  // Library exercises come from the API. The hand-written guides need no request.
+  useEffect(() => {
+    if (isCurated) return
+    let cancelled = false
+    setEx(null)
+    setError('')
+    fetchExercise(slug)
+      .then(d => { if (!cancelled) setEx(d) })
+      .catch(e => { if (!cancelled) setError(e.status === 404 ? 'notfound' : e.message) })
+    return () => { cancelled = true }
+  }, [slug, isCurated])
 
   const isFav = favs.includes(slug)
   const toggleFav = () => {
     const next = isFav ? favs.filter(f => f !== slug) : [...favs, slug]
-    setFavs(next); write('gf_favorites', next)
+    setFavs(next)
+    write('gf_favorites', next)
   }
 
-  // Build one "view" object, from either the hand-written guide or the library
+  // Build one "view" object, from either the hand-written guide or the API
   let view = null
-  if (curated && meta) {
+  if (isCurated) {
     view = { curated: true, name: meta.name, eyebrow: curated.eyebrow, tags: curated.tags, primary: curated.primary, secondary: curated.secondary }
-  } else if (lib) {
-    const e = lib.find(x => x.slug === slug)
-    if (e) {
-      view = {
-        name: e.name,
-        eyebrow: [titleCase(e.category), titleCase(e.mechanic)].filter(Boolean).join(' · '),
-        tags: [[LEVEL_TAG[e.level] || 'muted', e.level], ['green', titleCase(e.equipment)], ...(e.force ? [['muted', e.force]] : [])],
-        primary: e.primary.map(titleCase), secondary: e.secondary.map(titleCase),
-        plain: e.instructions, images: e.images,
-        similar: lib.filter(x => x.slug !== slug && x.primary[0] === e.primary[0] && x.equipment === e.equipment).slice(0, 4),
-      }
+  } else if (ex) {
+    view = {
+      name: ex.name,
+      eyebrow: [titleCase(ex.category), titleCase(ex.mechanic)].filter(Boolean).join(' · '),
+      tags: [[LEVEL_TAG[ex.level] || 'muted', ex.level], ['green', titleCase(ex.equipment)], ...(ex.force ? [['muted', ex.force]] : [])],
+      primary: ex.primary.map(titleCase),
+      secondary: ex.secondary.map(titleCase),
+      plain: ex.instructions,
+      images: ex.images,
+      similar: ex.similar,
     }
   }
-  const back = curated ? ['/workout', 'Back to workout'] : ['/exercises', 'Library']
+  const back = isCurated ? ['/workout', 'Back to workout'] : ['/exercises', 'Library']
 
   if (!view) {
     return (
       <Layout back={back[0]} backLabel={back[1]}>
         <div className="page-header">
-          <h1>{lib ? 'Exercise not found' : 'Loading…'}</h1>
-          {lib && <Link to="/exercises" className="amber-link">Browse the library →</Link>}
+          <h1>{error === 'notfound' ? 'Exercise not found' : error ? "Couldn't load" : 'Loading…'}</h1>
+          {error && error !== 'notfound' && <p className="muted">{error}. Make sure the API is running.</p>}
+          {error && <Link to="/exercises" className="amber-link">Browse the library →</Link>}
         </div>
       </Layout>
     )
@@ -156,7 +170,7 @@ export default function Exercise() {
       )}
 
       <div className="btn-row spaced">
-        <Link to={curated ? '/workout' : '/exercises'} className="btn-primary">{curated ? 'Back to workout' : 'Back to library'} →</Link>
+        <Link to={isCurated ? '/workout' : '/exercises'} className="btn-primary">{isCurated ? 'Back to workout' : 'Back to library'} →</Link>
         <Link to="/plan" className="btn-ghost">My plan</Link>
       </div>
     </Layout>
