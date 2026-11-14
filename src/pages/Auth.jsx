@@ -11,9 +11,18 @@ const MODES = {
   reset: { eyebrow: 'Reset password', h1: ['Choose a', 'new password.'], button: 'Save password', email: false, password: true },
 }
 
+// Must match the rules in server/routes/auth.js (the server has the final say)
+const RULES = [
+  ['At least 8 characters', p => p.length >= 8],
+  ['An uppercase letter', p => /[A-Z]/.test(p)],
+  ['A lowercase letter', p => /[a-z]/.test(p)],
+  ['A number', p => /[0-9]/.test(p)],
+  ['A symbol (like ! or @)', p => /[^A-Za-z0-9]/.test(p)],
+]
+
 export default function Auth({ mode }) {
   const m = MODES[mode]
-  const { user, login, register, logout } = useAuth()
+  const { user, login, register } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [params] = useSearchParams()
@@ -24,6 +33,9 @@ export default function Auth({ mode }) {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState(location.state?.notice || '')
   const [busy, setBusy] = useState(false)
+
+  const needsStrongPassword = m.password && mode !== 'login'
+  const passwordOk = !needsStrongPassword || RULES.every(([, test]) => test(password))
 
   async function submit(e) {
     e.preventDefault()
@@ -62,7 +74,6 @@ export default function Auth({ mode }) {
         </div>
         <div className="btn-row">
           <Link to="/plan" className="btn-primary">Go to my plan →</Link>
-          <button className="btn-ghost" onClick={logout}>Log out</button>
         </div>
       </Layout>
     )
@@ -90,15 +101,22 @@ export default function Auth({ mode }) {
             <input
               className="search-input" type="password" required value={password} onChange={e => setPassword(e.target.value)}
               autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-              minLength={mode === 'login' ? undefined : 8}
             />
-            {mode !== 'login' && <p className="hint">At least 8 characters.</p>}
+            {needsStrongPassword && (
+              <ul className="pw-rules">
+                {RULES.map(([label, test]) => (
+                  <li key={label} className={test(password) ? 'ok' : ''}>{test(password) ? '✓' : '○'} {label}</li>
+                ))}
+              </ul>
+            )}
           </>
         )}
         {mode === 'reset' && !token && <div className="error">This link is missing its token. Request a new one.</div>}
         {error && <div className="error">{error}</div>}
 
-        <button className="btn-primary" disabled={busy || (mode === 'reset' && !token)}>{busy ? 'One moment…' : m.button}</button>
+        <button className="btn-primary" disabled={busy || !passwordOk || (mode === 'reset' && !token)}>
+          {busy ? 'One moment…' : m.button}
+        </button>
 
         <div className="auth-links">
           {mode === 'login' && <><Link to="/register" className="amber-link">Create an account</Link><Link to="/forgot-password" className="amber-link">Forgot password?</Link></>}

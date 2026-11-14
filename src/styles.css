@@ -231,3 +231,6 @@ nav{position:sticky;top:0;z-index:100;background:rgba(17,19,20,.88);backdrop-fil
 .auth-links{display:flex;gap:18px;flex-wrap:wrap;margin-top:22px;font-size:14px}
 .notice{font-size:14px;color:var(--green);background:var(--green-dim);border:1px solid rgba(76,175,125,.25);border-radius:var(--radius);padding:12px 16px;margin-bottom:18px}
 .btn-primary:disabled,.btn-ghost:disabled{opacity:.5;cursor:default}
+/* checkpoint 4 polish: password checklist */
+.pw-rules{list-style:none;display:grid;gap:4px;margin:-4px 0 18px;font-size:13px;color:var(--text-3)}
+.pw-rules .ok{color:var(--green)}

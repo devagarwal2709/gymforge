@@ -10,7 +10,13 @@ const fail = (res, status, code, message) => res.status(status).json({ error: { 
 const hashPassword = pw => argon2.hash(pw, { type: argon2.argon2id })
 
 const email = z.string().trim().toLowerCase().email('Enter a valid email').max(254)
-const newPassword = z.string().min(8, 'Use at least 8 characters').max(128)
+const newPassword = z.string()
+  .min(8, 'Use at least 8 characters')
+  .max(128)
+  .regex(/[A-Z]/, 'Include an uppercase letter')
+  .regex(/[a-z]/, 'Include a lowercase letter')
+  .regex(/[0-9]/, 'Include a number')
+  .regex(/[^A-Za-z0-9]/, 'Include a symbol, like ! or @')
 
 // Used so a wrong email takes as long to reject as a wrong password (no account-guessing by timing)
 const DUMMY_HASH = await hashPassword('not-a-real-password')
