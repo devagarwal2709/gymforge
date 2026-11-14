@@ -1,11 +1,15 @@
 import express from 'express'
 import { z } from 'zod'
 import { prisma } from './db.js'
+import cookieParser from 'cookie-parser'
 import exercises from './routes/exercises.js'
+import auth from './routes/auth.js'
+import me from './routes/me.js'
 
 const app = express()
 app.disable('x-powered-by')
 app.use(express.json())
+app.use(cookieParser())
 
 // Is the API up, and can it reach the database?
 app.get('/api/v1/health', async (req, res) => {
@@ -18,6 +22,8 @@ app.get('/api/v1/health', async (req, res) => {
 })
 
 app.use('/api/v1/exercises', exercises)
+app.use('/api/v1/auth', auth)
+app.use('/api/v1/me', me)
 
 // Anything else under /api is an unknown endpoint
 app.use('/api', (req, res) => {

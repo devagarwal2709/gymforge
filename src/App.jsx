@@ -6,6 +6,7 @@ import Plan from './pages/Plan.jsx'
 import Workout from './pages/Workout.jsx'
 import Exercise from './pages/Exercise.jsx'
 import Nutrition from './pages/Nutrition.jsx'
+import Auth from './pages/Auth.jsx'
 import Exercises from './pages/Exercises.jsx'
 
 // Scroll to top on every page change
@@ -52,6 +53,10 @@ export default function App() {
           <Route path="/exercises" element={<Exercises />} />
           <Route path="/exercises/:slug" element={<Exercise />} />
           <Route path="/nutrition" element={<Nutrition />} />
+          <Route path="/login" element={<Auth key="login" mode="login" />} />
+          <Route path="/register" element={<Auth key="register" mode="register" />} />
+          <Route path="/forgot-password" element={<Auth key="forgot" mode="forgot" />} />
+          <Route path="/reset-password" element={<Auth key="reset" mode="reset" />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Boundary>
